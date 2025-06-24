@@ -9,6 +9,7 @@ fastapi>=0.104.0
 uvicorn>=0.24.0
 selenium>=4.15.0
 pydantic>=2.5.0,<2.11.0  # 限制版本以避免 Windows 构建问题
+pydantic-core<2.20.0  # 显式限制 pydantic-core 版本
 python-multipart>=0.0.6
 pandas>=2.0.0
 cryptography>=41.0.0
