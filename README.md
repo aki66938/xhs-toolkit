@@ -104,6 +104,8 @@ uv run python xhs_toolkit.py status  ## 验证工具是否可用
 ```
 
 > 💡 **uv使用提示**：文档中所有 `python` 命令都可以用 `uv run python` 替代，享受更快的依赖管理体验！
+>
+> ⚠️ **Windows 用户注意**：如遇到构建错误，请参考 [Windows 安装指南](docs/windows-installation.md)
 
 #### 方法二：pip (传统方式)
 
