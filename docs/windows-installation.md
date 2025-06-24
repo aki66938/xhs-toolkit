@@ -1,5 +1,13 @@
 # Windows 安装指南
 
+## Python 版本要求
+
+⚠️ **重要提示**：请使用 **Python 3.10 - 3.12 的稳定版本**。不要使用：
+- Python 3.14.0a7 等 alpha/beta 开发版本
+- Python 3.9 或更早版本
+
+推荐使用 Python 3.11 或 3.12 的最新稳定版。
+
 ## 已知问题
 
 ### uv 构建错误 ([Issue #7](https://github.com/aki66938/xhs-toolkit/issues/7))
@@ -15,7 +23,34 @@ maturin failed: A python 3 interpreter on Linux or macOS must define abiflags in
 
 ## 解决方案
 
-### 方案 1：使用 Windows 专用依赖文件（推荐）
+### 方案 1：检查并切换 Python 版本（首选）
+
+1. 检查当前 Python 版本：
+```bash
+python --version
+```
+
+2. 如果使用的是 alpha/beta 版本，请安装稳定版本：
+```bash
+# 查看所有已安装的 Python 版本
+py -0
+
+# 使用稳定版本创建虚拟环境（例如 3.11 或 3.12）
+py -3.11 -m venv venv
+# 或
+py -3.12 -m venv venv
+```
+
+3. 激活虚拟环境并安装：
+```bash
+# PowerShell
+venv\Scripts\Activate.ps1
+
+# 安装依赖
+uv pip install -r requirements-windows.txt
+```
+
+### 方案 2：使用 Windows 专用依赖文件
 
 使用专门为 Windows 准备的依赖文件，其中限制了 pydantic 版本：
 
@@ -27,7 +62,7 @@ pip install -r requirements-windows.txt
 uv pip install -r requirements-windows.txt
 ```
 
-### 方案 2：使用预编译包
+### 方案 3：使用预编译包
 
 如果需要使用最新版本的 pydantic，可以：
 
@@ -41,7 +76,7 @@ pip install pydantic --only-binary :all:
 pip install -e .
 ```
 
-### 方案 3：使用 conda
+### 方案 4：使用 conda
 
 使用 conda 可以避免构建问题：
 
@@ -64,6 +99,7 @@ WEBDRIVER_CHROME_DRIVER="C:\\tools\\chromedriver.exe"
 
 ## 其他注意事项
 
-1. 确保 Python 版本 >= 3.10
+1. **Python 版本**：必须使用 3.10-3.12 的稳定版本，避免使用 alpha/beta 版本
 2. 建议使用虚拟环境
 3. ChromeDriver 版本需要与 Chrome 浏览器版本匹配
+4. 如果遇到构建错误，首先检查 Python 版本是否为稳定版本
