@@ -1,0 +1,43 @@
+#!/bin/bash
+# 小红书工具包 - 统一启动脚本
+
+# 获取脚本目录
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# 如果没有参数，启动交互式界面
+if [ $# -eq 0 ]; then
+    # 检查是否有uv命令
+    if command -v uv &> /dev/null; then
+        if [ ! -d ".venv" ]; then
+            echo "🔧 首次运行，正在安装依赖..."
+            uv sync
+        fi
+        exec uv run python xhs_toolkit_interactive.py
+    elif [ -f ".venv/bin/python" ]; then
+        exec .venv/bin/python xhs_toolkit_interactive.py
+    elif [ -f "venv/bin/python" ]; then
+        exec venv/bin/python xhs_toolkit_interactive.py
+    else
+        if command -v python3 &> /dev/null; then
+            exec python3 xhs_toolkit_interactive.py
+        else
+            exec python xhs_toolkit_interactive.py
+        fi
+    fi
+else
+    # 如果有参数，执行传统命令
+    if command -v uv &> /dev/null && [ -d ".venv" ]; then
+        exec uv run python xhs_toolkit.py "$@"
+    elif [ -f ".venv/bin/python" ]; then
+        exec .venv/bin/python xhs_toolkit.py "$@"
+    elif [ -f "venv/bin/python" ]; then
+        exec venv/bin/python xhs_toolkit.py "$@"
+    else
+        if command -v python3 &> /dev/null; then
+            exec python3 xhs_toolkit.py "$@"
+        else
+            exec python xhs_toolkit.py "$@"
+        fi
+    fi
+fi

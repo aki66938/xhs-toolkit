@@ -76,19 +76,41 @@ sudo apt-get install chromium-chromedriver
 
 ## 🚀 快速开始
 
-### 一键安装（推荐）
+### 💡 极简使用方式
 
 ```bash
-# 下载并运行安装脚本
-curl -sSL https://raw.githubusercontent.com/aki66938/xhs-toolkit/main/install.sh | bash
-
-# 或者手动运行
+# 克隆项目
 git clone https://github.com/aki66938/xhs-toolkit.git
 cd xhs-toolkit
-bash install.sh
+
+# 运行（会自动安装依赖）
+./xhs              # Mac/Linux
+xhs.bat            # Windows
+
+# 或使用 Python
+python install_deps.py  # 安装依赖向导
+./xhs                   # 启动程序
 ```
 
+### 🎮 交互式菜单
 
+运行 `./xhs` 后会显示友好的菜单界面：
+
+```
+╭─────────────────────────────────────────╮
+│       小红书MCP工具包 v1.2.5           │
+│        快速操作菜单系统                 │
+╰─────────────────────────────────────────╯
+
+【主菜单】
+1. 🔄 数据收集
+2. 🌐 浏览器操作
+3. 📊 数据管理
+4. 🍪 Cookie管理
+5. 🚀 MCP服务器
+6. ⚙️  系统工具
+0. 退出
+```
 
 ### 🛠️ 从源码运行
 
@@ -147,9 +169,13 @@ WEBDRIVER_CHROME_DRIVER="/opt/homebrew/bin/chromedriver"
 ### 2. 获取登录凭证
 
 ```bash
-python xhs_toolkit.py cookie save
-```
+# 方式一：使用交互式菜单
+./xhs
+# 选择 4 -> Cookie管理 -> 1 -> 获取新的Cookies
 
+# 方式二：直接命令
+./xhs cookie save
+```
 
 在弹出的浏览器中：
 1. 登录小红书创作者中心
@@ -159,8 +185,12 @@ python xhs_toolkit.py cookie save
 ### 3. 启动MCP服务器
 
 ```bash
+# 方式一：使用交互式菜单
+./xhs
+# 选择 5 -> MCP服务器 -> 1 -> 启动服务器
 
-python xhs_toolkit.py server start
+# 方式二：直接命令
+./xhs server start
 ```
 
 ### 4. 客户端配置
@@ -324,8 +354,99 @@ COLLECTION_SCHEDULE=0 9 * * 1-5
 # 每月1号凌晨2点采集
 COLLECTION_SCHEDULE=0 2 1 * *
 ```
+### 🎯 手动操作工具
+
+新增交互式菜单和手动操作工具，提供更便捷的操作体验：
+
+#### 主要功能
+- **🔄 数据收集**: 手动触发数据采集，支持选择数据类型和时间维度
+- **🌐 浏览器操作**: 快速打开已登录的小红书各页面
+- **📊 数据管理**: 导出Excel/JSON、分析数据趋势、备份恢复
+- **🍪 Cookie管理**: 获取、查看、验证Cookies状态
+
+#### 使用示例
+```bash
+# 启动交互式菜单
+./xhs
+
+# 或使用命令行
+./xhs manual collect --type all      # 收集所有数据
+./xhs manual browser --page publish  # 打开发布页面
+./xhs manual export --format excel   # 导出Excel
+./xhs manual analyze                 # 分析数据趋势
+```
 
 ---
+## 🚀 更新日志 - v1.2.5
+
+### 新增功能
+
+#### 🎮 交互式菜单系统
+- 统一入口 `./xhs`，无需记忆复杂命令
+- 数字选择菜单，操作更直观
+- 实时状态显示，了解系统状态
+- 支持Windows（xhs.bat）和Unix系统
+
+#### 🛠️ 手动操作工具集
+- **manual collect**: 手动数据收集，支持选择类型和维度
+- **manual browser**: 打开已登录浏览器，快速访问各页面
+- **manual export**: 导出数据为Excel或JSON格式
+- **manual analyze**: 分析数据趋势，查看最佳笔记
+- **manual backup/restore**: 数据备份和恢复功能
+
+#### 🔧 改进的依赖管理
+- 智能检测uv/pip环境
+- 自动选择最佳Python环境
+- 新增 `install_deps.py` 安装向导
+- 同时支持uv和pip安装方式
+
+### 优化改进
+- 简化启动命令，统一使用 `./xhs`
+- 改进Windows支持，提供bat和PowerShell脚本
+- 优化代码结构，拆分模块避免单文件过大
+- 增强错误处理和用户提示
+
+---
+## 🚀 更新日志 - v1.2.4
+
+### 新增功能
+
+#### 🌐 网络图片支持
+- 支持 HTTP/HTTPS 图片链接直接发布
+- 自动下载网络图片到本地临时目录
+- 支持常见图片格式（jpg、png、gif、webp）
+
+#### 📁 改进的图片处理
+- 新增 `ImageProcessor` 模块统一处理各种图片输入
+- 支持混合输入：`["local.jpg", "https://example.com/img.jpg"]`
+- 更灵活的输入格式支持
+
+### 使用示例
+
+```python
+# 网络图片
+smart_publish_note(
+    title="美食分享",
+    content="今天的美食",
+    images=["https://example.com/food.jpg"]
+)
+
+# 混合使用
+smart_publish_note(
+    title="旅行记录",
+    content="风景很美",
+    images=["/local/photo.jpg", "https://example.com/view.jpg"]
+)
+```
+
+### 其他优化
+- 改进文本处理，保留换行符
+- 更新文档说明
+
+---
+
+<details>
+<summary>📜 点击查看 v1.2.3 更新日志</summary>
 
 ## 🚀 更新日志 - v1.2.3
 
@@ -340,6 +461,8 @@ COLLECTION_SCHEDULE=0 2 1 * *
 - 添加了`--disable-gpu-compositing`、`--disable-notifications`等多个Chrome参数
 - 改进了MCP服务器启动时的异步初始化逻辑
 - 增强了Windows环境下的兼容性和稳定性
+
+</details>
 
 ---
 

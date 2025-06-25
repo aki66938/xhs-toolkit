@@ -23,6 +23,7 @@ from src.xiaohongshu.client import XHSClient
 from src.xiaohongshu.models import XHSNote
 from src.utils.logger import setup_logger, get_logger
 from src.utils.text_utils import safe_print
+from src.cli.manual_commands import manual_command, add_manual_parser
 
 logger = get_logger(__name__)
 
@@ -440,6 +441,9 @@ def main():
     # 状态检查命令
     subparsers.add_parser("status", help="显示系统状态")
     
+    # 手动操作命令
+    add_manual_parser(subparsers)
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -461,6 +465,27 @@ def main():
             success = config_command(args.action)
         elif args.command == "status":
             success = status_command()
+        elif args.command == "manual":
+            if not args.manual_action:
+                parser.parse_args(['manual', '--help'])
+                return
+            # 构建参数字典
+            kwargs = {}
+            if args.manual_action == "collect":
+                kwargs['data_type'] = args.data_type
+                kwargs['dimension'] = args.dimension
+            elif args.manual_action == "browser":
+                kwargs['page'] = args.page
+                kwargs['stay_open'] = args.stay_open
+            elif args.manual_action == "export":
+                kwargs['format'] = args.format
+                kwargs['output_dir'] = args.output_dir
+            elif args.manual_action == "backup":
+                kwargs['include_cookies'] = args.include_cookies
+            elif args.manual_action == "restore":
+                kwargs['backup_path'] = args.backup_path
+            
+            success = manual_command(args.manual_action, **kwargs)
         
         sys.exit(0 if success else 1)
         
