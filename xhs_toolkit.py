@@ -79,6 +79,10 @@ def cookie_command(action: str) -> bool:
             cookie_manager.display_cookies_info()
             return True
             
+        elif action == "string":
+            cookie_manager.display_cookies_string()
+            return True
+            
         elif action == "validate":
             result = cookie_manager.validate_cookies()
             if result:
@@ -95,7 +99,7 @@ def cookie_command(action: str) -> bool:
             
         else:
             safe_print(f"❌ 未知操作: {action}")
-            safe_print("💡 可用操作: save, show, validate, test")
+            safe_print("💡 可用操作: save, show, string, validate, test")
             return False
             
     except XHSToolkitError as e:
@@ -414,7 +418,7 @@ def main():
     
     # Cookie管理命令
     cookie_parser = subparsers.add_parser("cookie", help="Cookie管理")
-    cookie_parser.add_argument("action", choices=["save", "show", "validate", "test"], 
+    cookie_parser.add_argument("action", choices=["save", "show", "string", "validate", "test"], 
                               help="操作类型")
     
     # 服务器管理命令

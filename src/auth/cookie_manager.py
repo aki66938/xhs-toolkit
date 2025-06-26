@@ -702,6 +702,50 @@ class CookieManager:
         except Exception as e:
             logger.error(f"❌ 读取cookies失败: {e}")
     
+    def display_cookies_string(self) -> None:
+        """显示cookies字符串格式（可复制）"""
+        cookies_file = Path(self.config.cookies_file)
+        
+        if not cookies_file.exists():
+            logger.warning("❌ Cookies文件不存在")
+            return
+        
+        try:
+            with open(cookies_file, 'r', encoding='utf-8') as f:
+                cookies_data = json.load(f)
+            
+            # 兼容新旧格式
+            if isinstance(cookies_data, list):
+                cookies = cookies_data
+            else:
+                cookies = cookies_data.get('cookies', [])
+            
+            if not cookies:
+                print("❌ 没有找到cookies")
+                return
+            
+            print("🍪 Cookies字符串格式（可复制）:")
+            print("=" * 60)
+            
+            # 构建cookie字符串
+            cookie_strings = []
+            for cookie in cookies:
+                name = cookie.get('name', '')
+                value = cookie.get('value', '')
+                if name and value:
+                    cookie_strings.append(f"{name}={value}")
+            
+            # 显示完整的cookie字符串
+            cookie_string = "; ".join(cookie_strings)
+            print(f"\n{cookie_string}\n")
+            
+            print("=" * 60)
+            print(f"📊 总共 {len(cookie_strings)} 个cookies")
+            print("💡 提示: 可以复制上面的字符串在其他地方使用")
+            
+        except Exception as e:
+            logger.error(f"❌ 读取cookies失败: {e}")
+    
     @handle_exception
     def validate_cookies(self) -> bool:
         """

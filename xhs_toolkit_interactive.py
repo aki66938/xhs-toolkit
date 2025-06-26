@@ -279,12 +279,13 @@ class InteractiveMenu:
 
 1. 🍪 获取新的Cookies
 2. 👀 查看Cookies信息
-3. ✅ 验证Cookies有效性
-4. 🧪 测试ChromeDriver
+3. 📋 查看Cookies字符串格式
+4. ✅ 验证Cookies有效性
+5. 🧪 测试ChromeDriver
 0. 返回主菜单
 
 """)
-            choice = input("请选择操作 (0-4): ").strip()
+            choice = input("请选择操作 (0-5): ").strip()
             
             script_dir = Path(__file__).parent
             
@@ -307,6 +308,12 @@ class InteractiveMenu:
                 cookie_manager.display_cookies_info()
                 input("\n按回车键继续...")
             elif choice == "3":
+                safe_print("\n📋 查看Cookies字符串格式...")
+                from src.auth.cookie_manager import CookieManager
+                cookie_manager = CookieManager(self.config)
+                cookie_manager.display_cookies_string()
+                input("\n按回车键继续...")
+            elif choice == "4":
                 safe_print("\n✅ 验证Cookies...")
                 from src.auth.cookie_manager import CookieManager
                 cookie_manager = CookieManager(self.config)
@@ -316,7 +323,7 @@ class InteractiveMenu:
                 else:
                     safe_print("\n❌ Cookies验证失败，建议重新获取")
                 input("\n按回车键继续...")
-            elif choice == "4":
+            elif choice == "5":
                 safe_print("\n🧪 测试ChromeDriver...")
                 from src.auth.cookie_manager import CookieManager
                 cookie_manager = CookieManager(self.config)
