@@ -12,6 +12,9 @@ from typing import Dict, Any, Optional, List
 from dotenv import load_dotenv
 
 from .exceptions import ConfigurationError, handle_exception
+from ..utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class XHSConfig:
@@ -67,6 +70,11 @@ class XHSConfig:
         self.disable_images = os.getenv("DISABLE_IMAGES", "false").lower() == "true"
         self.debug_mode = os.getenv("DEBUG_MODE", "false").lower() == "true"
         self.headless = os.getenv("HEADLESS", "false").lower() == "true"  # 无头浏览器模式
+        
+        # 远程浏览器连接配置
+        self.enable_remote_browser = os.getenv("ENABLE_REMOTE_BROWSER", "false").lower() == "true"
+        self.remote_browser_host = os.getenv("REMOTE_BROWSER_HOST", "localhost")
+        self.remote_browser_port = int(os.getenv("REMOTE_BROWSER_PORT", "9222"))
         
         # 其他配置
         self.timeout = int(os.getenv("TIMEOUT", "30"))
@@ -184,6 +192,14 @@ class XHSConfig:
         except Exception:
             issues.append(f"Cookies目录不可写: {self.cookies_dir}")
         
+        # 远程浏览器配置验证（仅在启用时验证）
+        if self.enable_remote_browser:
+            if not (1024 <= self.remote_browser_port <= 65535):
+                issues.append(f"远程浏览器端口范围无效: {self.remote_browser_port}")
+            if not self.remote_browser_host.strip():
+                issues.append("远程浏览器主机地址不能为空")
+            logger.debug(f"远程浏览器配置验证: {self.remote_browser_host}:{self.remote_browser_port}")
+        
         return {
             "valid": len(issues) == 0,
             "issues": issues
@@ -220,6 +236,14 @@ DISABLE_IMAGES=false
 DEBUG_MODE=false
 # 无头浏览器模式（true=启用无头模式，false=显示浏览器界面）
 HEADLESS=false
+
+# 远程浏览器连接配置
+# 是否启用远程浏览器连接（true=连接远程浏览器，false=启动本地浏览器）
+ENABLE_REMOTE_BROWSER=false
+# 远程浏览器主机地址（通常为localhost或远程服务器IP）
+REMOTE_BROWSER_HOST=localhost
+# 远程浏览器调试端口（Chrome启动时的--remote-debugging-port参数）
+REMOTE_BROWSER_PORT=9222
 
 # 超时设置（秒）
 TIMEOUT=30
@@ -258,6 +282,9 @@ TIMEOUT=30
             "disable_images": self.disable_images,
             "debug_mode": self.debug_mode,
             "headless": self.headless,
+            "enable_remote_browser": self.enable_remote_browser,
+            "remote_browser_host": self.remote_browser_host,
+            "remote_browser_port": self.remote_browser_port,
             "timeout": self.timeout,
             "platform": platform.system(),
             "python_version": platform.python_version()

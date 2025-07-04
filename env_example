@@ -23,6 +23,12 @@ DEBUG_MODE=false
 # 无头浏览器模式（true=启用无头模式，false=显示浏览器界面）
 HEADLESS=false
 
+# 远程浏览器连接配置
+# 是否启用远程浏览器连接（true=连接远程浏览器，false=启动本地浏览器）
+ENABLE_REMOTE_BROWSER=true
+REMOTE_BROWSER_HOST=http://xx.xx.xx.xx
+REMOTE_BROWSER_PORT=xxxx
+
 # 超时设置（秒）
 TIMEOUT=30
 

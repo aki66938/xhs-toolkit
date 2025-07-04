@@ -57,11 +57,16 @@ class ChromeDriverManager:
             # 设置Chrome选项
             chrome_options = self._create_chrome_options()
             
-            # 设置Chrome服务
-            service = self._create_chrome_service()
-            
             # 创建驱动
-            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            if self.config.enable_remote_browser:
+                debugger_address = f"{self.config.remote_browser_host}:{self.config.remote_browser_port}/wd/hub"
+                logger.info(f"🌐 连接到远程浏览器: {debugger_address}")
+                logger.debug("远程浏览器连接选项配置完成")
+                self.driver = webdriver.Remote(command_executor=debugger_address, options=chrome_options)
+            else:
+                # 设置Chrome服务
+                service = self._create_chrome_service()
+                self.driver = webdriver.Chrome(service=service, options=chrome_options)
             
             self.is_initialized = True
             
@@ -77,6 +82,9 @@ class ChromeDriverManager:
     def _create_chrome_options(self) -> Options:
         """创建Chrome选项"""
         chrome_options = Options()
+        
+        # 本地浏览器启动配置
+        logger.info("🖥️ 启用本地浏览器模式")
         
         # 基础选项
         chrome_options.add_argument('--no-sandbox')
@@ -122,8 +130,6 @@ class ChromeDriverManager:
             chrome_options.add_argument('--start-maximized')
             
             logger.info("🔒 启用强制无头浏览器模式（双重保险）")
-        else:
-            logger.info("🖥️ 启用有界面浏览器模式")
         
         # 设置Chrome可执行文件路径
         if self.config.chrome_path:
@@ -148,6 +154,9 @@ class ChromeDriverManager:
         
         # 窗口大小
         chrome_options.add_argument('--window-size=1920,1080')
+
+        # 添加文件保存位置
+        chrome_options.add_argument(f'--user-data-dir=/home/seluser/google-chrome-data')
         
         # 调试选项
         if self.config.debug_mode:
@@ -155,13 +164,12 @@ class ChromeDriverManager:
             chrome_options.add_argument('--log-level=0')
             logger.debug("已启用Chrome调试日志")
         
-        logger.debug("Chrome选项配置完成")
+        logger.debug("本地浏览器选项配置完成")
         return chrome_options
     
     def _create_chrome_service(self) -> Service:
         """创建Chrome服务"""
         service_args = []
-        
         # 设置ChromeDriver路径
         chromedriver_path = self.config.chromedriver_path
         if chromedriver_path:

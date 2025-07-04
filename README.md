@@ -75,6 +75,62 @@ sudo apt-get install chromium-chromedriver
 
 > ⚠️ **重要提示**：版本不匹配是最常见的问题原因，请确保ChromeDriver版本与Chrome浏览器版本完全一致！
 
+### 🌐 远程浏览器连接
+
+支持连接到已运行的远程Chrome实例，提高性能和支持远程部署场景。
+
+#### 🔧 配置方法
+
+在 `.env` 文件中添加以下配置：
+
+```bash
+# 启用远程浏览器连接
+ENABLE_REMOTE_BROWSER=true
+REMOTE_BROWSER_HOST=http://xx.xx.xx.xx
+REMOTE_BROWSER_PORT=xxxx
+```
+
+#### 🚀 启动远程Chrome
+- 如果报错没有权限，请检查 `./chrome-data` 目录是否存在切查看是否有读写权限，如果没有读写权限，请按照下面的步骤修复
+  1. `docker run --rm selenium/standalone-chrome id seluser` 获取seluser的uid，例如返回 `uid=1200(seluser) gid=1200(seluser) groups=1200(seluser)`
+  2. `sudo chown -R 1200:1200 ./chrome-data` 赋予seluser的读写权限，1200是seluser的uid
+  3. 重新执行 `docker-compose up --force-recreate` 启动容器
+
+```bash
+version: '3.8'
+
+services:
+  selenium-chrome:
+    image: selenium/standalone-chrome:latest
+    container_name: selenium-chrome
+    ports:
+      - "54444:4444"
+      - "57900:7900"
+    shm_size: 2g
+    environment:
+      - SE_VNC_NO_PASSWORD=1
+    volumes:
+      - ./chrome-data:/home/seluser  # 更换挂载路径，确保权限
+    restart: unless-stopped
+    command: >
+      bash -c "mkdir -p /home/seluser/.config/google-chrome &&
+              touch /home/seluser/.config/google-chrome/test.txt &&
+              /opt/bin/entry_point.sh"
+```
+
+#### 💡 使用场景
+
+- **远程部署**：在服务器上运行Chrome，本地连接使用
+- **性能优化**：复用已运行的Chrome实例，避免重复启动
+- **开发调试**：连接到已登录的Chrome实例，保持会话状态
+- **Docker环境**：在容器间共享Chrome实例
+
+#### ⚠️ 注意事项
+
+- 远程连接时不会启动新的Chrome实例
+- 确保目标Chrome实例已开启远程调试功能
+- 某些操作（如窗口大小调整）在远程模式下可能不支持
+
 ## 🚀 快速开始
 
 ### 💡 极简使用方式
@@ -178,7 +234,7 @@ WEBDRIVER_CHROME_DRIVER="/opt/homebrew/bin/chromedriver"
 ./xhs cookie save
 ```
 
-在弹出的浏览器中：
+在弹出的浏览器中, 如果是连接的远程浏览器，可以访问 http://ip:57900 访问vnc界面，然后执行下面的步骤：
 1. 登录小红书创作者中心
 2. 确保能正常访问创作者中心功能
 3. 完成后按回车键保存
