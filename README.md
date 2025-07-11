@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/aki66938-xhs-toolkit-badge.png)](https://mseep.ai/app/aki66938-xhs-toolkit)
+
 # 📕 小红书创作者MCP工具包
 
 [![许可证](https://img.shields.io/github/license/aki66938/xhs-toolkit)](LICENSE)
