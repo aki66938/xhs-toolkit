@@ -175,20 +175,25 @@ class ManualTools:
             driver = self.browser_manager.create_driver()
             cookies = self.cookie_manager.load_cookies()
             
-            # 先访问主站点设置cookies
-            driver.get("https://www.xiaohongshu.com")
+            # 先访问目标页面的根域名
+            if "creator.xiaohongshu.com" in url:
+                # 对于创作者中心页面，先访问创作者中心首页
+                driver.get("https://creator.xiaohongshu.com")
+            else:
+                # 对于主站页面，先访问主站首页
+                driver.get("https://www.xiaohongshu.com")
+            
             time.sleep(2)
             
-            # 添加cookies
-            for cookie in cookies:
-                try:
-                    driver.add_cookie(cookie)
-                except Exception as e:
-                    logger.warning(f"添加cookie失败: {e}")
+            # 使用浏览器管理器的cookie加载方法
+            safe_print("🍪 加载cookies...")
+            cookie_result = self.browser_manager.load_cookies(cookies)
+            safe_print(f"✅ Cookies加载完成: 成功 {cookie_result['success_count']}, 失败 {cookie_result['error_count']}")
             
             # 访问目标页面
             safe_print(f"🔗 访问页面: {url}")
             driver.get(url)
+            time.sleep(2)
             
             safe_print(f"✅ 已打开{page}页面")
             

@@ -6,6 +6,9 @@
 
 import asyncio
 import time
+import os
+import tempfile
+import platform
 from typing import Optional, List, Dict, Any
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -79,6 +82,37 @@ class ChromeDriverManager:
         except Exception as e:
             raise BrowserError(f"创建Chrome驱动失败: {str(e)}", browser_action="create_driver") from e
     
+    def _get_user_data_dir(self) -> str:
+        """
+        获取适合当前平台的Chrome用户数据目录
+        
+        Returns:
+            用户数据目录路径
+        """
+        system = platform.system()
+        
+        if system == "Darwin":  # macOS
+            # 使用macOS标准的应用支持目录
+            user_home = os.path.expanduser("~")
+            user_data_dir = os.path.join(user_home, "Library", "Application Support", "Google", "Chrome", "xhs-toolkit-profile")
+        elif system == "Linux":
+            # 使用Linux标准的配置目录
+            user_home = os.path.expanduser("~")
+            user_data_dir = os.path.join(user_home, ".config", "google-chrome", "xhs-toolkit-profile")
+        elif system == "Windows":
+            # 使用Windows标准的应用数据目录
+            appdata = os.environ.get("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local"))
+            user_data_dir = os.path.join(appdata, "Google", "Chrome", "User Data", "xhs-toolkit-profile")
+        else:
+            # 使用临时目录作为后备
+            user_data_dir = os.path.join(tempfile.gettempdir(), "chrome-user-data", "xhs-toolkit-profile")
+        
+        # 确保目录存在
+        os.makedirs(user_data_dir, exist_ok=True)
+        logger.debug(f"Chrome用户数据目录: {user_data_dir}")
+        
+        return user_data_dir
+
     def _create_chrome_options(self) -> Options:
         """创建Chrome选项"""
         chrome_options = Options()
@@ -155,8 +189,9 @@ class ChromeDriverManager:
         # 窗口大小
         chrome_options.add_argument('--window-size=1920,1080')
 
-        # 添加文件保存位置
-        chrome_options.add_argument(f'--user-data-dir=/home/seluser/google-chrome-data')
+        # 添加平台适配的用户数据目录
+        user_data_dir = self._get_user_data_dir()
+        chrome_options.add_argument(f'--user-data-dir={user_data_dir}')
         
         # 调试选项
         if self.config.debug_mode:
@@ -230,6 +265,10 @@ class ChromeDriverManager:
         try:
             logger.info(f"🍪 开始加载 {len(cookies)} 个cookies...")
             
+            # 获取当前页面URL
+            current_url = self.driver.current_url
+            logger.debug(f"当前页面URL: {current_url}")
+            
             success_count = 0
             error_count = 0
             
@@ -239,10 +278,32 @@ class ChromeDriverManager:
                     cookie_data = {
                         'name': cookie['name'],
                         'value': cookie['value'],
-                        'domain': cookie.get('domain', '.xiaohongshu.com'),
                         'path': cookie.get('path', '/'),
                         'secure': cookie.get('secure', False)
                     }
+                    
+                    # 处理域名匹配
+                    original_domain = cookie.get('domain', '.xiaohongshu.com')
+                    
+                    # 如果cookie的域名与当前页面不匹配，跳过或调整
+                    if 'creator.xiaohongshu.com' in current_url:
+                        # 在创作者中心页面
+                        if original_domain in ['.xiaohongshu.com', 'creator.xiaohongshu.com', '.creator.xiaohongshu.com']:
+                            cookie_data['domain'] = original_domain
+                        else:
+                            # 对于其他域名的cookie，尝试适配到创作者中心
+                            logger.debug(f"调整cookie域名从 {original_domain} 到 creator.xiaohongshu.com")
+                            cookie_data['domain'] = 'creator.xiaohongshu.com'
+                    elif 'xiaohongshu.com' in current_url:
+                        # 在小红书主站页面
+                        if original_domain in ['.xiaohongshu.com', 'www.xiaohongshu.com']:
+                            cookie_data['domain'] = original_domain
+                        else:
+                            cookie_data['domain'] = '.xiaohongshu.com'
+                    else:
+                        # 不在小红书相关页面，跳过这个cookie
+                        logger.debug(f"跳过cookie {cookie['name']}: 当前页面不匹配域名 {original_domain}")
+                        continue
                     
                     # 只添加过期时间如果存在且有效
                     if 'expiry' in cookie and cookie['expiry']:
@@ -252,7 +313,8 @@ class ChromeDriverManager:
                     success_count += 1
                     
                 except Exception as cookie_error:
-                    logger.debug(f"加载cookie失败 ({cookie.get('name', 'unknown')}): {cookie_error}")
+                    logger.warning(f"添加cookie失败: {str(cookie_error)}")
+                    logger.debug(f"失败的cookie详情: {cookie.get('name', 'unknown')}")
                     error_count += 1
             
             logger.info(f"✅ Cookies加载完成: 成功 {success_count}, 失败 {error_count}")
