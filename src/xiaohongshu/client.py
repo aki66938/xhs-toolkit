@@ -376,22 +376,38 @@ class XHSClient:
         try:
             logger.info("📝 填写内容...")
             
-            # 尝试多个内容选择器
+            # 尝试多个内容选择器（优先使用TipTap/ProseMirror编辑器）
             content_selectors = [
-                ".ql-editor",
+                ".tiptap.ProseMirror",           # 新版TipTap编辑器
+                ".ProseMirror",                   # ProseMirror编辑器
+                ".tiptap",                        # TipTap容器
+                "[contenteditable='true']",       # 任何可编辑元素
+                ".ql-editor",                     # 旧版Quill编辑器
                 "[placeholder*='内容']",
                 "[placeholder*='content']",
                 "textarea",
                 ".content-input",
-                ".editor"
+                ".editor-content"
             ]
             
             content_input = None
             for selector in content_selectors:
                 try:
-                    content_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
-                    if content_input.is_displayed():
-                        logger.info(f"✅ 找到内容输入框: {selector}")
+                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                    for elem in elements:
+                        if elem.is_displayed() and elem.get_attribute("contenteditable") == "true":
+                            content_input = elem
+                            logger.info(f"✅ 找到内容输入框: {selector}")
+                            break
+                    if content_input:
+                        break
+                    # 如果没找到contenteditable的，尝试找第一个可见的
+                    for elem in elements:
+                        if elem.is_displayed():
+                            content_input = elem
+                            logger.info(f"✅ 找到内容输入框(非contenteditable): {selector}")
+                            break
+                    if content_input:
                         break
                 except:
                     continue
@@ -399,7 +415,14 @@ class XHSClient:
             if not content_input:
                 raise PublishError("无法找到内容输入框", publish_step="查找内容输入框")
             
-            content_input.clear()
+            # 对于contenteditable元素，使用JavaScript清空
+            try:
+                driver.execute_script("arguments[0].innerHTML = '';", content_input)
+            except:
+                try:
+                    content_input.clear()
+                except:
+                    pass  # 忽略清空错误
             
             # 处理内容，支持换行
             from selenium.webdriver.common.keys import Keys
@@ -613,20 +636,28 @@ class XHSClient:
             
             # 检查内容输入框是否存在
             content_selectors = [
-                ".ql-editor",
+                ".tiptap.ProseMirror",           # 新版TipTap编辑器
+                ".ProseMirror",                   # ProseMirror编辑器
+                ".tiptap",                        # TipTap容器
+                "[contenteditable='true']",       # 任何可编辑元素
+                ".ql-editor",                     # 旧版Quill编辑器
                 "[placeholder*='内容']",
                 "[placeholder*='content']",
                 "textarea",
                 ".content-input",
-                ".editor"
+                ".editor-content"
             ]
             
             content_input = None
             for selector in content_selectors:
                 try:
-                    content_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
-                    if content_input.is_displayed():
-                        logger.info(f"✅ 确认内容输入框可用: {selector}")
+                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                    for elem in elements:
+                        if elem.is_displayed() and elem.get_attribute("contenteditable") == "true":
+                            content_input = elem
+                            logger.info(f"✅ 确认内容输入框可用: {selector}")
+                            break
+                    if content_input:
                         break
                 except:
                     continue
