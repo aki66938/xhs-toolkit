@@ -31,7 +31,9 @@ class XHSSelectors:
     # 内容填写
     TITLE_INPUT = ".d-text"
     TITLE_INPUT_ALT = "[placeholder*='标题']"
-    CONTENT_EDITOR = ".ql-editor"
+    CONTENT_EDITOR = "[contenteditable='true']"  # Tiptap 编辑器（小红书已升级）
+    CONTENT_EDITOR_ALT = ".tiptap"
+    CONTENT_EDITOR_LEGACY = ".ql-editor"  # 旧版 Quill 编辑器（备用）
     
     # 发布按钮
     PUBLISH_BUTTON = ".publishBtn"

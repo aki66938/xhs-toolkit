@@ -376,9 +376,12 @@ class XHSClient:
         try:
             logger.info("📝 填写内容...")
             
-            # 尝试多个内容选择器
+            # 尝试多个内容选择器（小红书现在使用 Tiptap 编辑器）
             content_selectors = [
-                ".ql-editor",
+                "[contenteditable='true']",  # Tiptap 编辑器
+                ".tiptap",
+                ".ProseMirror",
+                ".ql-editor",  # 旧版 Quill 编辑器
                 "[placeholder*='内容']",
                 "[placeholder*='content']",
                 "textarea",
@@ -439,14 +442,20 @@ class XHSClient:
         driver = self.browser_manager.driver
         
         try:
+            # 先滚动到页面底部，确保发布按钮可见
+            logger.info("📜 滚动到页面底部...")
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            await asyncio.sleep(1)
+            
             logger.info("🚀 点击发布按钮...")
             
-            # 尝试多个发布按钮选择器
+            # 尝试多个发布按钮选择器（优先使用文本匹配）
             publish_selectors = [
+                "//button[contains(text(), '发布')]",  # 优先使用文本匹配
+                ".custom-button.bg-red",  # 小红书特定的发布按钮样式
                 ".publishBtn",
                 "[class*='publish']",
                 "button[type='submit']",
-                "//button[contains(text(), '发布')]",
                 "//button[contains(text(), '提交')]"
             ]
             
@@ -467,12 +476,83 @@ class XHSClient:
             if not submit_btn:
                 raise PublishError("无法找到发布按钮", publish_step="查找发布按钮")
             
-            submit_btn.click()
-            logger.info("✅ 发布按钮已点击")
+            # 使用 JavaScript 点击，更可靠
+            driver.execute_script("arguments[0].click();", submit_btn)
+            logger.info("✅ 发布按钮已点击（使用 JavaScript）")
+            await asyncio.sleep(3)  # 增加等待时间
+            
+            # 检查是否有确认弹窗
+            logger.info("🔍 检查是否有确认弹窗...")
+            confirm_clicked = False
+            
+            # 可能的确认按钮选择器
+            confirm_selectors = [
+                "//button[contains(text(), '确认')]",
+                "//button[contains(text(), '确定')]",
+                "//div[contains(@class, 'modal')]//button[contains(text(), '确认')]",
+                "//div[contains(@class, 'dialog')]//button[contains(text(), '确认')]",
+                "//div[contains(@class, 'modal')]//button[contains(text(), '确定')]",
+                ".modal button.confirm",
+                ".dialog button.confirm",
+                "[class*='modal'] [class*='confirm']",
+                "[class*='dialog'] [class*='confirm']",
+                "[class*='modal'] button:last-child",
+                "[class*='dialog'] button:last-child"
+            ]
+            
+            for selector in confirm_selectors:
+                try:
+                    if selector.startswith("//"):
+                        confirm_btn = driver.find_element(By.XPATH, selector)
+                    else:
+                        confirm_btn = driver.find_element(By.CSS_SELECTOR, selector)
+                    
+                    if confirm_btn.is_displayed() and confirm_btn.is_enabled():
+                        logger.info(f"✅ 找到确认按钮: {selector}")
+                        confirm_btn.click()
+                        logger.info("✅ 确认按钮已点击")
+                        confirm_clicked = True
+                        await asyncio.sleep(3)
+                        break
+                except:
+                    continue
+            
+            if not confirm_clicked:
+                logger.info("ℹ️ 未发现确认弹窗，可能直接发布成功")
+            
+            # 等待页面跳转或状态更新
             await asyncio.sleep(3)
             
             current_url = driver.current_url
             logger.info(f"📍 发布后页面URL: {current_url}")
+            
+            # 检查是否有成功提示
+            success_indicators = [
+                "//div[contains(text(), '发布成功')]",
+                "//span[contains(text(), '发布成功')]",
+                "//*[contains(text(), '发布成功')]",
+                "//div[contains(text(), '已发布')]",
+                "//span[contains(text(), '已发布')]"
+            ]
+            
+            success_found = False
+            for selector in success_indicators:
+                try:
+                    elements = driver.find_elements(By.XPATH, selector)
+                    for elem in elements:
+                        if elem.is_displayed():
+                            logger.info(f"✅ 发现成功提示: {elem.text}")
+                            success_found = True
+                            break
+                    if success_found:
+                        break
+                except:
+                    continue
+            
+            if success_found:
+                logger.info("🎉 笔记发布成功！")
+            else:
+                logger.info("ℹ️ 未发现明确的成功提示，但流程已完成")
             
             return XHSPublishResult(
                 success=True,

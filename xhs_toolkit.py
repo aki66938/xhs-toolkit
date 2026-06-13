@@ -20,12 +20,27 @@ from src.core.exceptions import XHSToolkitError, format_error_message
 from src.auth.cookie_manager import CookieManager
 from src.server.mcp_server import MCPServer
 from src.xiaohongshu.client import XHSClient
-from src.xiaohongshu.models import XHSNote
+from src.xiaohongshu.models import XHSNote, XHSPublishResult
 from src.utils.logger import setup_logger, get_logger
 from src.utils.text_utils import safe_print
 from src.cli.manual_commands import manual_command, add_manual_parser
 
 logger = get_logger(__name__)
+
+# 全局客户端实例
+_xhs_client = None
+
+async def ensure_component_initialization():
+    """确保组件已初始化"""
+    global _xhs_client
+    
+    if _xhs_client is None:
+        logger.info("🔧 初始化小红书客户端...")
+        config = XHSConfig()
+        _xhs_client = XHSClient(config)
+        logger.info("✅ 客户端初始化完成")
+    
+    return _xhs_client
 
 def print_banner():
     """打印工具横幅"""
@@ -268,16 +283,21 @@ async def publish_command(title: str, content: str, topics: str = "",
     
     try:
         # 检查和初始化组件
-        await ensure_component_initialization()
+        client = await ensure_component_initialization()
         
-        # 创建笔记对象，使用智能解析
-        note = await XHSNote.async_smart_create(
+        # 解析话题和图片
+        topics_list = [t.strip() for t in topics.split(",")] if topics else []
+        images_list = [i.strip() for i in images.split(",")] if images else []
+        videos_list = [v.strip() for v in videos.split(",")] if videos else []
+        
+        # 创建笔记对象
+        note = XHSNote(
             title=title,
             content=content,
-            topics=topics,
+            topics=topics_list,
             location=location,
-            images=images,
-            videos=videos
+            images=images_list,
+            videos=videos_list
         )
         
         logger.info(f"📝 笔记信息: 标题={note.title}, 话题={note.topics}")
