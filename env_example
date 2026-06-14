@@ -1,10 +1,10 @@
 # 小红书MCP工具包环境变量配置
 
 # Chrome浏览器路径
-CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
+CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
-# ChromeDriver路径（可选，为空则使用系统PATH）
-WEBDRIVER_CHROME_DRIVER=C:\chromedriver\chromedriver.EXE
+# ChromeDriver路径  
+WEBDRIVER_CHROME_DRIVER="/opt/homebrew/bin/chromedriver"
 
 # MCP服务器配置
 SERVER_HOST=0.0.0.0
