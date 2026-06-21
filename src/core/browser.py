@@ -5,6 +5,8 @@
 """
 
 import asyncio
+import os
+import tempfile
 import time
 from typing import Optional, List, Dict, Any
 from selenium import webdriver
@@ -89,6 +91,11 @@ class ChromeDriverManager:
         # 基础选项
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
+        
+        # 设置用户数据目录，避免权限问题
+        user_data_dir = os.path.join(tempfile.gettempdir(), 'xhs-chrome-profile')
+        os.makedirs(user_data_dir, exist_ok=True)
+        chrome_options.add_argument(f'--user-data-dir={user_data_dir}')
         # chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--disable-software-rasterizer')
         chrome_options.add_argument('--disable-background-timer-throttling')
@@ -155,8 +162,8 @@ class ChromeDriverManager:
         # 窗口大小
         chrome_options.add_argument('--window-size=1920,1080')
 
-        # 添加文件保存位置
-        chrome_options.add_argument(f'--user-data-dir=/home/seluser/google-chrome-data')
+        # 注意：user-data-dir 已在上面设置，此处不再重复设置
+        # 原来硬编码的 /home/seluser/google-chrome-data 在非Docker环境下不存在
         
         # 调试选项
         if self.config.debug_mode:
