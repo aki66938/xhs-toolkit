@@ -14,6 +14,7 @@ import time
 import asyncio
 from pathlib import Path
 
+
 # 导入重构后的模块
 from src.core.config import XHSConfig
 from src.core.exceptions import XHSToolkitError, format_error_message
@@ -133,7 +134,8 @@ def server_command(action: str, port: int = 8000, host: str = "0.0.0.0") -> bool
             # 初始化配置和服务器
             config = XHSConfig()
             server = MCPServer(config)
-            server.start()
+            # 使用asyncio.run来运行异步的start方法
+            asyncio.run(server.start())
             return True
             
         except KeyboardInterrupt:

@@ -782,7 +782,7 @@ class MCPServer:
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
     
-    def start_stdio(self) -> None:
+    async def start_stdio(self) -> None:
         """启动stdio模式的MCP服务器（用于Claude Desktop）"""
         # 设置日志只输出到stderr，避免干扰stdio通信
         import sys
@@ -823,7 +823,12 @@ class MCPServer:
                 logger.info("📊 初始化数据采集功能...")
                 # stdio模式下使用无头浏览器
                 self.xhs_client.browser_manager.headless = True
-                self.scheduler_initialized = self._initialize_data_collection()
+                await self._initialize_data_collection()
+
+                if self.scheduler_initialized:
+                    logger.info("✅ 数据采集功能初始化完成")
+                else:
+                    logger.info("ℹ️ 数据采集功能未启用或初始化失败")
             else:
                 logger.info("ℹ️ 数据采集功能未启用")
         except Exception as e:
@@ -831,9 +836,9 @@ class MCPServer:
         
         # 使用stdio transport
         logger.info("🎯 MCP工具已注册，等待客户端连接...")
-        self.mcp.run(transport="stdio")
+        await self.mcp.run_async(transport="stdio")
     
-    def start(self) -> None:
+    async def start(self) -> None:
         """启动MCP服务器"""
         logger.info("🚀 启动小红书 MCP 服务器...")
         
@@ -886,7 +891,7 @@ class MCPServer:
         # 初始化数据采集功能（无头模式）
         logger.info("📊 初始化数据采集功能（无头模式）...")
         try:
-            asyncio.run(self._initialize_data_collection())
+            await self._initialize_data_collection()
             if self.scheduler_initialized:
                 logger.info("✅ 数据采集功能初始化完成（无头模式）")
             else:
@@ -900,7 +905,7 @@ class MCPServer:
             logging.getLogger("uvicorn").setLevel(logging.WARNING)
             logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
             
-            self.mcp.run(transport="sse", port=self.config.server_port, host=self.config.server_host)
+            await self.mcp.run_async(transport="sse", port=self.config.server_port, host=self.config.server_host)
             
         except KeyboardInterrupt:
             logger.info("👋 收到停止信号，正在关闭服务器...")
@@ -950,10 +955,10 @@ def main():
     # 检查是否通过stdio启动（Claude Desktop使用）
     if len(sys.argv) > 1 and sys.argv[1] == "--stdio":
         # 使用stdio模式
-        server.start_stdio()
+        asyncio.run(server.start_stdio())
     else:
         # 默认使用SSE模式（用于其他客户端）
-        server.start()
+        asyncio.run(server.start())
 
 
 if __name__ == "__main__":

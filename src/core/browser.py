@@ -6,6 +6,7 @@
 
 import asyncio
 import time
+import os
 from typing import Optional, List, Dict, Any
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -156,7 +157,10 @@ class ChromeDriverManager:
         chrome_options.add_argument('--window-size=1920,1080')
 
         # 添加文件保存位置
-        chrome_options.add_argument(f'--user-data-dir=/home/seluser/google-chrome-data')
+        home_dir = os.path.expanduser("~")
+        # 创建一个专门用于存放chrome数据的文件夹路径
+        profile_path = os.path.join(home_dir, "xhs-toolkit-chrome-data")
+        chrome_options.add_argument(f'--user-data-dir={profile_path}')
         
         # 调试选项
         if self.config.debug_mode:
