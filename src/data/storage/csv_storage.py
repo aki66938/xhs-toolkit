@@ -461,12 +461,13 @@ class CSVStorage(BaseStorage):
             # 重写整个文件
             with open(file_path, 'w', newline='', encoding='utf-8') as f:
                 if chinese_headers:
-                    # 使用中文表头
-                    f.write(','.join(chinese_headers) + '\n')
-                    # 写入数据行，按字段顺序
-                    for row in all_data:
-                        values = [str(row.get(field, '')) for field in fields]
-                        f.write(','.join(values) + '\n')
+                    # 使用CSV writer处理逗号、引号和换行符
+                    writer = csv.writer(f)
+                    writer.writerow(chinese_headers)
+                    writer.writerows(
+                        [str(row.get(field, '')) for field in fields]
+                        for row in all_data
+                    )
                 else:
                     # 降级到英文表头
                     writer = csv.DictWriter(f, fieldnames=fields)
